@@ -593,7 +593,19 @@ void AFortPlayerControllerAthena::ServerBeginEditingBuildingActor(UObject* Conte
 				return entry.ItemDefinition->Class == UFortEditToolItemDefinition::StaticClass();
 			}, FFortItemEntry::Size());
 
-		PlayerController->MyFortPawn->EquipWeaponDefinition((UFortWeaponItemDefinition*)EditToolEntry->ItemDefinition, EditToolEntry->ItemGuid, EditToolEntry->HasTrackerGuid() ? EditToolEntry->TrackerGuid : FGuid(), false);
+		if (!EditToolEntry) {
+			auto EditToolDef = FindObject<UFortItemDefinition>("/Game/Items/Weapons/BuildingTools/EditTool.EditTool");
+			PlayerController->WorldInventory->GiveItem(EditToolDef, 1);
+
+			EditToolEntry = PlayerController->WorldInventory->Inventory.ReplicatedEntries.Search([&](FFortItemEntry& entry)
+				{
+					return entry.ItemDefinition->Class == UFortEditToolItemDefinition::StaticClass();
+				}, FFortItemEntry::Size());
+		}
+		if (EditToolEntry) {
+			// edit tool entry is null on stw somehow
+			PlayerController->MyFortPawn->EquipWeaponDefinition((UFortWeaponItemDefinition*)EditToolEntry->ItemDefinition, EditToolEntry->ItemGuid, EditToolEntry->HasTrackerGuid() ? EditToolEntry->TrackerGuid : FGuid(), false);
+		}
 	}
 
 	if (auto EditTool = PlayerController->MyFortPawn->CurrentWeapon->Cast<AFortWeap_EditingTool>())
